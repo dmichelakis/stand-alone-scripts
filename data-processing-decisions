@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# Context: Big files processing kills machines due to memory errors. This becomes more
+# challenging when processing is triggered automatically (e.g. through other scripts,
+# web applications, workers, or other).
+# Purpose: Get evidence of whether the file should be processed as is or a different
+# processing strategy needs to be explored, such as creating subsets or other.
+# Objectives
+# 1. Get file size
+# 2. Get available RAM
+# 3. Calculate available memory after the file gets fed into available memory
+
+# Represents the file which will be processed
+filepath=$1
+
+# Total free RAM in the processing machine (KBytes)
+free_memory=$(grep MemFree /proc/meminfo | awk '{print $2}')
+
+# Grand total hard disk for a file (Bytes)
+filepath_size=$(stat -c%s "$filepath")
+
+# Grand total hard disk transformed to KBytes
+filepath_size=$(echo "scale=2 ; $filepath_size / 1024" | bc)
+
+# Percentage of available memory after this file starts being processed
+percentage=$(echo "scale=2 ; ($free_memory - $filepath_size)/$free_memory*100" | bc)
+
+echo $percentage
+
+
